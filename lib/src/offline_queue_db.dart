@@ -33,7 +33,12 @@ class OfflineQueueDb {
     );
   }
 
-  Future<void> queueRequest(String url, String method, String? body, String? headers) async {
+  Future<void> queueRequest(
+    String url,
+    String method,
+    String? body,
+    String? headers,
+  ) async {
     final db = await database;
     await db.insert('network_queue', {
       'url': url,
@@ -44,9 +49,9 @@ class OfflineQueueDb {
     });
   }
 
-  Future<List<Map<String,dynamic>>> getQueuedRequests() async{
-    final db=await database;
-    return await db.query('network_queue',orderBy: 'timestamp ASC');
+  Future<List<Map<String, dynamic>>> getQueuedRequests() async {
+    final db = await database;
+    return await db.query('network_queue', orderBy: 'timestamp ASC');
   }
 
   Future<void> deleteRequest(int id) async {

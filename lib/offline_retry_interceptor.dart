@@ -13,17 +13,30 @@ class OfflineRetryInterceptor extends Interceptor {
   }
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     if (err.requestOptions.method.toUpperCase() != 'GET' &&
-        (err.type == DioExceptionType.connectionError || err.type == DioExceptionType.connectionTimeout)) {
+        (err.type == DioExceptionType.connectionError ||
+            err.type == DioExceptionType.connectionTimeout)) {
       final options = err.requestOptions;
       final headersString = jsonEncode(options.headers);
       final bodyString = options.data is Map || options.data is List
           ? jsonEncode(options.data)
           : options.data?.toString();
-      await _db.queueRequest(options.path, options.method, bodyString, headersString);
+      await _db.queueRequest(
+        options.path,
+        options.method,
+        bodyString,
+        headersString,
+      );
       return handler.resolve(
-        Response(requestOptions: options, statusCode: 202, statusMessage: 'Offline: Request queued securely'),
+        Response(
+          requestOptions: options,
+          statusCode: 202,
+          statusMessage: 'Offline: Request queued securely',
+        ),
       );
     }
     return handler.next(err);

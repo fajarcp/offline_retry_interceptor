@@ -8,7 +8,8 @@ import 'package:offline_retry_interceptor/offline_retry_interceptor.dart';
 import 'package:offline_retry_interceptor/src/offline_queue_db.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-class MockErrorInterceptorHandler extends Mock implements ErrorInterceptorHandler {}
+class MockErrorInterceptorHandler extends Mock
+    implements ErrorInterceptorHandler {}
 
 class MockRequestOptions extends Mock implements RequestOptions {}
 
@@ -23,14 +24,16 @@ void main() {
     databaseFactory = databaseFactoryFfi;
     registerFallbackValue(FakeResponse());
     registerFallbackValue(FakeDioException());
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('dev.fluttercommunity.plus/connectivity'),
-      (MethodCall methodCall) async => 'none',
-    );
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-      const MethodChannel('dev.fluttercommunity.plus/connectivity_status'),
-      (MethodCall methodCall) async => null,
-    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.fluttercommunity.plus/connectivity'),
+          (MethodCall methodCall) async => 'none',
+        );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          const MethodChannel('dev.fluttercommunity.plus/connectivity_status'),
+          (MethodCall methodCall) async => null,
+        );
   });
 
   group('OfflineQueueDb Tests', () {
@@ -58,7 +61,12 @@ void main() {
     });
 
     test('Should delete a request by ID', () async {
-      await dbHelper.queueRequest('https://api.example.com/delete', 'DELETE', null, null);
+      await dbHelper.queueRequest(
+        'https://api.example.com/delete',
+        'DELETE',
+        null,
+        null,
+      );
       var queue = await dbHelper.getQueuedRequests();
       expect(queue.length, 1);
 
@@ -86,36 +94,48 @@ void main() {
       await db.delete('network_queue');
     });
 
-    test('Should intercept connection errors, queue POST requests, and resolve with 202', () async {
-      final requestOptions = RequestOptions(
-        path: '/submit-data',
-        method: 'POST',
-        data: {'foo': 'bar'},
-        headers: {'Content-Type': 'application/json'},
-      );
+    test(
+      'Should intercept connection errors, queue POST requests, and resolve with 202',
+      () async {
+        final requestOptions = RequestOptions(
+          path: '/submit-data',
+          method: 'POST',
+          data: {'foo': 'bar'},
+          headers: {'Content-Type': 'application/json'},
+        );
 
-      final dioException = DioException(requestOptions: requestOptions, type: DioExceptionType.connectionError);
+        final dioException = DioException(
+          requestOptions: requestOptions,
+          type: DioExceptionType.connectionError,
+        );
 
-      await interceptor.onError(dioException, mockHandler);
+        await interceptor.onError(dioException, mockHandler);
 
-      verify(() => mockHandler.resolve(any())).called(1);
-      final queue = await dbHelper.getQueuedRequests();
-      expect(queue.length, 1);
-      expect(queue.first['url'], '/submit-data');
-      expect(queue.first['body'], '{"foo":"bar"}');
-    });
+        verify(() => mockHandler.resolve(any())).called(1);
+        final queue = await dbHelper.getQueuedRequests();
+        expect(queue.length, 1);
+        expect(queue.first['url'], '/submit-data');
+        expect(queue.first['body'], '{"foo":"bar"}');
+      },
+    );
 
-    test('Should ignore GET requests and pass the error down the chain', () async {
-      final requestOptions = RequestOptions(path: '/get-data', method: 'GET');
+    test(
+      'Should ignore GET requests and pass the error down the chain',
+      () async {
+        final requestOptions = RequestOptions(path: '/get-data', method: 'GET');
 
-      final dioException = DioException(requestOptions: requestOptions, type: DioExceptionType.connectionError);
+        final dioException = DioException(
+          requestOptions: requestOptions,
+          type: DioExceptionType.connectionError,
+        );
 
-      await interceptor.onError(dioException, mockHandler);
+        await interceptor.onError(dioException, mockHandler);
 
-      verify(() => mockHandler.next(dioException)).called(1);
+        verify(() => mockHandler.next(dioException)).called(1);
 
-      final queue = await dbHelper.getQueuedRequests();
-      expect(queue.isEmpty, true);
-    });
+        final queue = await dbHelper.getQueuedRequests();
+        expect(queue.isEmpty, true);
+      },
+    );
   });
 }
